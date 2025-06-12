@@ -1318,7 +1318,7 @@ select max(idpedido) + 1 from pedido;
 create sequence pedido_id_seq minvalue 16;
 alter table pedido alter idpedido set default nextval('pedido_id_seq');
 alter sequence pedido_id_seq owned by pedido.idpedido;
-insert into pedido (data_pedido, valor, idcliente, idvendedor);
+insert into pedido (data_pedido, valor, idcliente, idvendedor)
 values (current_date, 130, 1, 1);
 select * from pedido;
 
@@ -1397,3 +1397,286 @@ create index idx_cliente_nome on cliente (nome);
 create index idx_pdd_data_pedido on pedido (data_pedido);
 create index idx_pdr_nome on produto (nome);
 drop index idx_pdd_data_pedido;
+
+-- Funções
+create or replace function formata_moeda(valor float) returns varchar(20) language plpgsql as
+$$
+begin
+	return concat('R$ ', round(cast(valor as numeric), 2));
+end;
+$$;
+
+select valor, formata_moeda(valor) from pedido;
+select valor, formata_moeda(valor) from produto;
+
+create function get_nome_by_id(idc integer) returns varchar(50) language plpgsql as
+$$
+declare r varchar(50);
+begin
+	select nome into r from cliente where idcliente = idc;
+	return r;
+end;
+$$;
+
+-- 1. Crie uma função que receba como parâmetro o ID do pedido e retorne o valor total deste pedido
+create or replace function get_valor_pedido(idp integer) returns varchar(20) language plpgsql as
+$$
+declare resultado varchar(20);
+begin
+	select formata_moeda(pdd.valor) into resultado 
+	from pedido pdd 
+	where pdd.idpedido = idp;
+	
+	return resultado;
+end;
+$$;
+
+select get_valor_pedido(idpedido) from pedido;
+
+-- 2. Crie uma função chamada “maior”, que quando executada retorne o pedido com o maior valor
+create or replace function maior_pedido() returns varchar(20) language plpgsql as
+$$
+declare resultado varchar(20);
+begin
+	select idpedido into resultado
+	from pedido 
+	where valor = (select max(valor) from pedido);
+	return resultado;
+end;
+$$;
+
+-- Stored Procedures
+create procedure insere_bairro(nome_bairro varchar(30)) language sql as
+$$
+	insert into bairro (nome) values (nome_bairro);
+$$;
+
+call insere_bairro('Teste procedure');
+select * from bairro;
+
+-- 1. Crie uma stored procedure que receba como parâmetro o ID do produto e o percentual de aumento, e reajuste o preço somente deste 
+-- produto de acordo com o valor passado como parâmetro
+create or replace procedure reajuste_produto(idp integer, perAum float) language sql as
+$$
+	update produto set valor = valor + ((valor * perAum) / 100) where idproduto = idp;
+$$;
+select * from produto;
+call reajuste_produto(1, 10);
+
+-- 2. Crie uma stored procedure que receba como parâmetro o ID do produto e exclua da base de dados somente o produto com o ID correspondente
+create or replace procedure excluir_produto(idp integer) language sql as
+$$
+	delete from produto where idproduto = idp;
+$$;
+select * from produto;
+-- excluiu teste
+call excluir_produto(9);
+
+-- Triggers
+create table bairro_auditoria (
+	idbairro integer not null,
+	data_criacao timestamp not null
+);
+
+create or replace function bairro_log() returns trigger language plpgsql as
+$$
+begin
+	-- old 4 -> new 6
+	insert into bairro_auditoria (idbairro, data_criacao) values (new.idbairro, current_timestamp);
+	return new;
+end;
+$$;
+
+create or replace trigger log_bairro_trigger after insert on bairro for each row execute procedure bairro_log();
+
+call insere_bairro ('Teste 10');
+call insere_bairro ('Teste 20');
+call insere_bairro ('Teste 30');
+select * from bairro;
+select * from bairro_auditoria;
+
+-- 1.	Crie uma tabela chamada PEDIDOS_APAGADOS
+create table pedidos_apagados (
+	idpedido integer not null,
+	idcliente integer not null,
+	idtransportadora integer,
+	idvendedor integer not null,
+	data_pedido date not null,
+	valor float not null,
+	data_apagado date not null
+);
+alter table pedidos_apagados alter column data_apagado type timestamp;
+
+ -- 2. Faça uma trigger que quando um pedido for apagado, todos os seus dados devem ser copiados para a tabela PEDIDOS_APAGADOS
+create or replace function pedido_log() returns trigger language plpgsql as
+$$
+begin
+	insert into pedidos_apagados (idpedido, idcliente, idtransportadora, idvendedor, data_pedido, valor, data_apagado)
+	values (old.idpedido, old.idcliente, old.idtransportadora, old.idvendedor, old.data_pedido, old.valor, current_timestamp);
+	return old;
+end;
+$$;
+
+create or replace trigger log_pedido_trigger before delete on pedido for each row execute procedure pedido_log();
+
+select * from pedido;
+
+select idpedido from pedido where idpedido not in (select idpedido from pedido_produto);
+
+delete from pedido where idpedido = 17;
+
+select * from pedidos_apagados;
+
+ -- Domínios
+ -- Tipo de dados: https://www.postgresql.org/docs/current/datatype-numeric.html#DATATYPE-INT
+
+-- Ids
+create domain idcurto as smallint;
+create domain idmedio as integer;
+create domain idlongo as bigint;
+
+-- Caracteres
+create domain sigla as char(3);
+create domain codigo as varchar(10);
+create domain nome_curto as varchar(15);
+create domain nome_medio as varchar(50);
+create domain nome_longo as varchar(70);
+create domain documento as varchar(15);
+create domain tipo as char(1);
+create domain texto as text;
+
+-- Data e hora
+create domain data as date;
+create domain hora as time;
+create domain data_hora timestamp;
+
+-- Numéricos
+create domain moeda as numeric(10,2);
+create domain float_curto as numeric(6,2);
+create domain float_medio as numeric(10,2);
+create domain float_longo as numeric(15,2);
+create domain quantidade as smallint;
+
+alter table bairro alter column nome type nome_medio;
+
+alter table bairro_auditoria alter column data_criacao type data_hora;
+
+drop view cliente_dados;
+drop view dados_pedido;
+
+alter table cliente alter column nome type nome_longo;
+alter table cliente alter column cpf type documento;
+alter table cliente alter column rg type documento;
+alter table cliente alter column data_nascimento type data;
+alter table cliente alter column genero type tipo;
+alter table cliente alter column logradouro type nome_longo;
+alter table cliente alter column numero type nome_curto;
+alter table cliente alter column idprofissao type idmedio;
+alter table cliente alter column idnacionalidade type idmedio;
+alter table cliente alter column idbairro type idmedio;
+alter table cliente alter column idmunicipio type idmedio;
+alter table cliente alter column idcomplemento type idmedio;
+
+alter table complemento alter column nome type nome_medio;
+
+drop view produto_fornecedor;
+drop view municipio_uf;
+drop view transportadora_uf;
+
+alter table fornecedor alter column nome type nome_medio;
+
+alter table municipio alter column nome type nome_medio;
+alter table municipio alter column iduf type idmedio;
+
+alter table nacionalidade alter column nome type nome_medio;
+
+alter table pedido alter column idpedido type bigint;
+alter table pedido alter column idcliente type idmedio;
+alter table pedido alter column idtransportadora type idmedio;
+alter table pedido alter column idvendedor type idmedio;
+alter table pedido alter column data_pedido type data;
+alter table pedido alter column valor type moeda;
+
+drop view produto_pedido;
+
+alter table pedido_produto alter column idpedido type idlongo;
+alter table pedido_produto alter column idproduto type idmedio;
+alter table pedido_produto alter column quantidade type quantidade;
+alter table pedido_produto alter column valor_unitario type moeda;
+
+alter table pedidos_apagados alter column idpedido type idlongo;
+alter table pedidos_apagados alter column idcliente type idmedio;
+alter table pedidos_apagados alter column idtransportadora type idmedio;
+alter table pedidos_apagados alter column idvendedor type idmedio;
+alter table pedidos_apagados alter column data_pedido type data;
+alter table pedidos_apagados alter column valor type moeda;
+
+alter table produto alter column idfornecedor type idmedio;
+alter table produto alter column nome type nome_medio;
+alter table produto alter column valor type moeda;
+
+alter table profissao alter column nome type nome_medio;
+
+alter table transportadora alter column idmunicipio type idmedio;
+alter table transportadora alter column nome type nome_medio;
+alter table transportadora alter column logradouro type nome_longo;
+alter table transportadora alter column numero type nome_curto;
+
+alter table uf alter column nome type nome_medio;
+alter table uf alter column sigla type sigla;
+
+alter table vendedor alter column nome type nome_medio;
+
+-- Recriar as views
+
+-- Usuários e permissões
+create role gerente;
+create role estagiario;
+
+grant select, insert, delete, update on bairro, cliente, complemento, fornecedor, municipio, nacionalidade, pedido, pedido_produto, produto, profissao, transportadora, uf, vendedor to gerente with grant option;
+grant all on all sequences in schema public to gerente;
+-- revoke
+
+grant select on cliente_dados, data_do_pedido to estagiario;
+
+create role maria login password '123' in role gerente;
+create role pedro login password '321' in role estagiario;
+
+-- 1. Crie um novo papel chamado “atendente”
+create role atendente;
+
+-- 2. Defina somente permissões para o novo papel poder selecionar e incluir novos pedidos 
+-- (tabelas pedido e pedido_produto). O restante do acesso deve estar bloqueado
+grant select, insert on pedido, pedido_produto to atendente with grant option;
+grant all on pedido_id_seq to atendente with grant option;
+
+-- 3. Crie um novo usuário associado ao novo papel
+create role ana login password '1234' in role atendente;
+
+-- 4. Realize testes para verificar se as permissões foram aplicadas corretamente
+
+-- Transações
+create table conta (
+	idconta serial not null,
+	cliente nome_medio not null,
+	saldo moeda not null default 0,
+	constraint pk_cnt_idconta primary key (idconta)
+);
+
+insert into conta (cliente, saldo) values ('Cliente 1', 1000);
+insert into conta (cliente, saldo) values ('Cliente 2', 500);
+
+select * from conta;
+
+update conta set saldo = saldo - 100 where idconta = 1;
+update conta set saldo = saldo + 100 where idconta = 2;
+
+begin;
+update conta set saldo = saldo - 100 where idconta = 1;
+update conta set saldo = saldo + 100 where idconta = 2;
+rollback;
+
+begin;
+update conta set saldo = saldo - 100 where idconta = 1;
+update conta set saldo = saldo + 100 where idconta = 2;
+commit;
