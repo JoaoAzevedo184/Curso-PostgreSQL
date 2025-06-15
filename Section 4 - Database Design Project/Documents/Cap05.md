@@ -12,6 +12,64 @@ O frete deverá ser calculado de acordo com a localidade que se encontra o clien
 
 ### 1. Entidades Identificadas
 
+- **LIVRO**
+- **CATEGORIA**
+- **CLIENTE**
+- **AUTOR**
+- **VENDA**
+- **ENDEREÇO**
+- **CIDADE**
+- **ESTADO**
+
 ### 2. Atributos das Entidades
 
+**LIVRO**:
++ idLivro
++ nome
++ preço
++ sinopse
++ data_lançamento
++ numero_paginas
++ isbn
+
+**CATEGORIA**:
++ idCtegoria
++ nome
+
+**CLIENTE**:
++ idCliente
++ nome
+
+**AUTOR**:
++ idAutor
++ nome
+
+**VENDA**:
++ idVenda
++ quantidade
++ frete
++ valor
+
+**ENDEREÇO**:
++ idEndereço
++ logradouro
++ numero
++ cep
+
+**CIDADE**:
++ idCidade
++ nome
+
+**ESTADO**:
++ idEstado
++ nome
+
 ### 3. Relacionamentos Identificados
+
+- Livro tem Categoria
+- Livro tem Autor
+- Venda possui Livro
+- Venda possui Cliente
+- Cliente possui Endereço
+- Endereço está Cidade
+- Cidade está Estado
