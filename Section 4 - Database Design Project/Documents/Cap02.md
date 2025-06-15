@@ -1,240 +1,364 @@
-# Operação Project (Projeção)
+# Modelo Conceitual - Entidades
 
-A operação **Project** (π - pi) é uma das operações fundamentais da álgebra relacional que permite selecionar colunas específicas de uma relação, criando uma nova relação com apenas os atributos desejados.
+As entidades são os elementos fundamentais do modelo conceitual de banco de dados. Elas representam objetos, pessoas, lugares ou conceitos do mundo real que possuem relevância para o sistema e sobre os quais desejamos armazenar informações.
 
-## Definição Formal
+## O que são Entidades?
 
-A operação de projeção é definida como:
+Uma entidade é qualquer objeto distinguível do mundo real sobre o qual queremos manter informações no banco de dados. Ela deve ter:
 
-**π<sub>A₁, A₂, ..., Aₖ</sub>(R)**
+- **Existência independente**: Pode existir por si só
+- **Identidade única**: Pode ser distinguida de outras entidades
+- **Relevância para o negócio**: Tem importância para o sistema
+- **Conjunto de propriedades**: Possui características que a descrevem
 
-Onde:
-- π (pi) é o símbolo da operação de projeção
-- A₁, A₂, ..., Aₖ são os atributos (colunas) a serem selecionados
-- R é a relação (tabela) de origem
+### Exemplos de Entidades
+- **CLIENTE**: Pessoa que compra produtos
+- **PRODUTO**: Item vendido pela empresa
+- **PEDIDO**: Solicitação de compra feita por um cliente
+- **FUNCIONÁRIO**: Pessoa que trabalha na empresa
+- **FORNECEDOR**: Empresa que fornece produtos
 
-## Características Principais
+## Tipos de Entidades
 
-### Seleção de Colunas
-A projeção permite escolher quais atributos devem aparecer no resultado, eliminando colunas desnecessárias e focando apenas nos dados relevantes para a consulta.
+### 1. Entidades Fortes (Regulares)
 
-### Eliminação de Duplicatas
-Por definição matemática, o resultado de uma projeção é um conjunto, portanto elimina automaticamente tuplas duplicadas. Isso garante que cada combinação de valores dos atributos selecionados apareça apenas uma vez.
+Entidades que possuem existência independente e podem ser identificadas por seus próprios atributos.
 
-### Preservação da Ordem Lógica
-Embora a álgebra relacional não defina ordem, na prática, a projeção mantém a sequência lógica dos dados quando possível.
+**Características:**
+- Possuem chave primária própria
+- Não dependem de outras entidades para existir
+- Representadas por retângulos simples no DER
 
-### Redução de Dados
-A projeção pode reduzir significativamente o volume de dados ao eliminar colunas desnecessárias e duplicatas.
+**Exemplos:**
+```
+CLIENTE
+- Possui CPF (chave primária)
+- Existe independentemente
 
-## Sintaxe em SQL
-
-A operação de projeção em SQL é implementada através da cláusula **SELECT**:
-
-```sql
-SELECT coluna1, coluna2, coluna3
-FROM tabela;
+PRODUTO  
+- Possui código do produto (chave primária)
+- Existe independentemente
 ```
 
-## Exemplos Práticos
+### 2. Entidades Fracas (Dependentes)
 
-### Exemplo 1: Projeção Simples
+Entidades que não possuem atributos suficientes para formar uma chave primária própria e dependem de outras entidades para sua identificação.
 
-**Tabela Funcionarios:**
-| id | nome | cargo | salario | departamento |
-|----|------|-------|---------|--------------|
-| 1 | Ana | Analista | 5000 | TI |
-| 2 | Bruno | Gerente | 8000 | Vendas |
-| 3 | Carlos | Analista | 4800 | TI |
-| 4 | Diana | Desenvolvedora | 6500 | TI |
+**Características:**
+- Não possuem chave primária independente
+- Dependem de entidade forte (proprietária)
+- Identificadas pela combinação de seus atributos + chave da entidade forte
+- Representadas por retângulos duplos no DER
 
-**Operação:** π<sub>nome, cargo</sub>(Funcionarios)
+**Exemplos:**
+```
+DEPENDENTE (entidade fraca)
+- Depende de FUNCIONÁRIO (entidade forte)
+- Identificado por: nome_dependente + cpf_funcionario
 
-```sql
-SELECT nome, cargo 
-FROM funcionarios;
+ITEM_PEDIDO (entidade fraca)
+- Depende de PEDIDO (entidade forte)  
+- Identificado por: numero_item + numero_pedido
 ```
 
-**Resultado:**
-| nome | cargo |
-|------|-------|
-| Ana | Analista |
-| Bruno | Gerente |
-| Carlos | Analista |
-| Diana | Desenvolvedora |
+### 3. Entidades Associativas
 
-### Exemplo 2: Projeção com Eliminação de Duplicatas
+Surgem quando um relacionamento muitos-para-muitos (N:M) precisa ter atributos próprios.
 
-**Operação:** π<sub>cargo</sub>(Funcionarios)
+**Características:**
+- Originam-se de relacionamentos N:M
+- Possuem atributos próprios além das chaves estrangeiras
+- Podem se relacionar com outras entidades
 
-```sql
-SELECT DISTINCT cargo 
-FROM funcionarios;
+**Exemplos:**
+```
+MATRÍCULA (entidade associativa)
+- Surge do relacionamento ALUNO-DISCIPLINA
+- Atributos próprios: data_matricula, nota, frequencia
+
+ITEM_PEDIDO (entidade associativa)
+- Surge do relacionamento PEDIDO-PRODUTO
+- Atributos próprios: quantidade, preco_unitario, desconto
 ```
 
-**Resultado:**
-| cargo |
-|-------|
-| Analista |
-| Gerente |
-| Desenvolvedora |
+## Identificação de Entidades
 
-Note que "Analista" aparece apenas uma vez, mesmo existindo dois funcionários com esse cargo.
+### Critérios para Identificar Entidades
 
-### Exemplo 3: Projeção com Expressões
+1. **Substantivos importantes** no domínio do problema
+2. **Objetos sobre os quais precisamos manter informações**
+3. **Elementos que possuem ciclo de vida próprio**
+4. **Conceitos que podem ser contados ou enumerados**
 
-```sql
--- Álgebra: π nome, salario*12 AS salario_anual (Funcionarios)
-SELECT nome, salario * 12 AS salario_anual 
-FROM funcionarios;
-```
+### Processo de Identificação
 
-**Resultado:**
-| nome | salario_anual |
-|------|---------------|
-| Ana | 60000 |
-| Bruno | 96000 |
-| Carlos | 57600 |
-| Diana | 78000 |
+1. **Análise dos Requisitos**
+   - Leia os requisitos do sistema
+   - Identifique substantivos importantes
+   - Verifique se são relevantes para o negócio
 
-## Aplicações no PostgreSQL
+2. **Aplicação de Critérios**
+   - É algo sobre o qual queremos manter dados?
+   - Possui identidade própria?
+   - É relevante para o sistema?
+   - Pode ser distinguido de outros objetos?
 
-### Projeção Básica
-```sql
--- Selecionar apenas nome e email dos clientes
-SELECT nome, email 
-FROM clientes;
-```
+3. **Validação**
+   - Confirme com stakeholders
+   - Verifique se faz sentido no contexto
+   - Elimine redundâncias
 
-### Projeção com Funções
-```sql
--- Projeção com transformação de dados
-SELECT 
-    nome,
-    UPPER(email) AS email_maiusculo,
-    DATE_PART('year', data_nascimento) AS ano_nascimento
-FROM clientes;
-```
+### Exemplo Prático - Sistema de Biblioteca
 
-### Projeção com Agregações
-```sql
--- Combinar projeção com funções de agregação
-SELECT 
-    departamento,
-    COUNT(*) AS total_funcionarios,
-    AVG(salario) AS salario_medio
-FROM funcionarios
-GROUP BY departamento;
-```
+**Requisitos:**
+"A biblioteca empresta livros para usuários. Cada livro tem título, autor e ISBN. Os usuários têm nome, CPF e endereço. Cada empréstimo registra data de empréstimo e data de devolução."
 
-### Projeção com DISTINCT
-```sql
--- Eliminar duplicatas explicitamente
-SELECT DISTINCT cidade, estado 
-FROM enderecos;
-```
+**Identificação de Entidades:**
 
-## Propriedades Importantes
+1. **USUÁRIO**
+   - Substantivo importante: ✓
+   - Mantemos informações: ✓ (nome, CPF, endereço)
+   - Identidade própria: ✓ (CPF)
+   - Relevante: ✓
 
-### Comutatividade com Seleção
-A projeção é comutativa com a seleção quando os atributos da condição de seleção estão incluídos na projeção:
+2. **LIVRO**
+   - Substantivo importante: ✓
+   - Mantemos informações: ✓ (título, autor, ISBN)
+   - Identidade própria: ✓ (ISBN)
+   - Relevante: ✓
+
+3. **EMPRÉSTIMO**
+   - Substantivo importante: ✓
+   - Mantemos informações: ✓ (datas)
+   - Identidade própria: ✓ (usuário + livro + data)
+   - Relevante: ✓
+
+## Representação Gráfica
+
+### Notação Padrão do Modelo ER
 
 ```
-π A₁,A₂ (σ condição (R)) = σ condição (π A₁,A₂ (R))
+┌─────────────┐
+│   CLIENTE   │  ← Entidade Forte
+└─────────────┘
+
+╔═════════════╗
+║ DEPENDENTE  ║  ← Entidade Fraca
+╚═════════════╝
+
+┌─────────────┐
+│  MATRÍCULA  │  ← Entidade Associativa
+└─────────────┘
 ```
 
-### Idempotência
-Aplicar a mesma projeção múltiplas vezes produz o mesmo resultado:
+### Exemplo Visual Completo
 
 ```
-π A₁,A₂ (π A₁,A₂ (R)) = π A₁,A₂ (R)
+Sistema de E-commerce:
+
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│   CLIENTE   │      │   PEDIDO    │      │   PRODUTO   │
+└─────────────┘      └─────────────┘      └─────────────┘
+
+╔═════════════╗      ┌─────────────┐
+║  ENDEREÇO   ║      │ ITEM_PEDIDO │
+╚═════════════╝      └─────────────┘
 ```
 
-### Composição de Projeções
-Uma projeção pode ser composta com outra, resultando na projeção dos atributos comuns:
+## Atributos das Entidades
+
+### Classificação dos Atributos
+
+1. **Atributos Simples**
+   - Não podem ser subdivididos
+   - Exemplo: CPF, data_nascimento
+
+2. **Atributos Compostos**
+   - Podem ser subdivididos em partes menores
+   - Exemplo: endereço (rua, cidade, CEP)
+
+3. **Atributos Multivalorados**
+   - Podem ter múltiplos valores
+   - Exemplo: telefones, emails
+
+4. **Atributos Derivados**
+   - Calculados a partir de outros atributos
+   - Exemplo: idade (calculada a partir da data_nascimento)
+
+### Exemplo de Entidade com Atributos
 
 ```
-π A₁ (π A₁,A₂ (R)) = π A₁ (R)
+FUNCIONÁRIO
+├── cpf (simples, chave)
+├── nome (simples)
+├── endereco (composto)
+│   ├── rua
+│   ├── cidade
+│   ├── cep
+│   └── estado
+├── telefones (multivalorado)
+├── data_nascimento (simples)
+└── idade (derivado)
 ```
 
-## Otimizações no PostgreSQL
+## Regras de Negócio e Entidades
 
-### Índices Cobrindo
-```sql
--- Criar índice que cobre a projeção
-CREATE INDEX idx_funcionarios_nome_cargo 
-ON funcionarios (nome, cargo);
+### Restrições de Integridade
 
--- Esta consulta pode usar apenas o índice
-SELECT nome, cargo 
-FROM funcionarios 
-WHERE departamento = 'TI';
+1. **Integridade de Entidade**
+   - Cada entidade deve ter um identificador único
+   - Não pode haver valores nulos na chave primária
+
+2. **Integridade de Domínio**
+   - Valores dos atributos devem estar dentro do domínio permitido
+   - Exemplo: idade deve ser um número positivo
+
+3. **Regras Específicas do Negócio**
+   - Idade mínima para ser cliente
+   - Limite de produtos por categoria
+   - Validações específicas do domínio
+
+### Exemplo de Regras
+
+```
+CLIENTE
+- CPF deve ser único e válido
+- Idade mínima: 18 anos
+- Email deve ser único no sistema
+
+PRODUTO
+- Código deve ser único
+- Preço deve ser maior que zero
+- Categoria deve existir no sistema
 ```
 
-### Materialized Views
-```sql
--- Criar uma view materializada para projeções frequentes
-CREATE MATERIALIZED VIEW funcionarios_resumo AS
-SELECT nome, cargo, departamento
-FROM funcionarios;
+## Validação de Entidades
 
--- Atualizar quando necessário
-REFRESH MATERIALIZED VIEW funcionarios_resumo;
+### Checklist de Validação
+
+1. **Necessidade**
+   - [ ] A entidade é realmente necessária?
+   - [ ] Representa algo importante para o negócio?
+   - [ ] Não é apenas um atributo de outra entidade?
+
+2. **Identificação**
+   - [ ] Possui identificador único?
+   - [ ] Pode ser distinguida de outras entidades?
+   - [ ] Tem existência independente (se for forte)?
+
+3. **Atributos**
+   - [ ] Possui atributos suficientes?
+   - [ ] Os atributos são relevantes?
+   - [ ] Não há atributos que deveriam ser entidades?
+
+4. **Relacionamentos**
+   - [ ] Se relaciona com outras entidades?
+   - [ ] Os relacionamentos fazem sentido?
+   - [ ] Não está isolada do modelo?
+
+## Exemplos Práticos por Domínio
+
+### Sistema Acadêmico
+```
+ALUNO, PROFESSOR, DISCIPLINA, TURMA, MATRÍCULA, CURSO, DEPARTAMENTO
 ```
 
-## Casos de Uso Comuns
-
-### Relatórios Específicos
-```sql
--- Relatório de vendas simplificado
-SELECT 
-    data_venda,
-    produto,
-    quantidade,
-    valor_total
-FROM vendas
-WHERE EXTRACT(MONTH FROM data_venda) = EXTRACT(MONTH FROM CURRENT_DATE);
+### Sistema Hospitalar
+```
+PACIENTE, MÉDICO, CONSULTA, EXAME, MEDICAMENTO, PRESCRIÇÃO, INTERNAÇÃO
 ```
 
-### APIs e Interfaces
-```sql
--- Dados para interface de usuário
-SELECT 
-    id,
-    nome,
-    foto_perfil,
-    status_online
-FROM usuarios
-WHERE ativo = true;
+### Sistema Bancário
+```
+CLIENTE, CONTA, TRANSAÇÃO, AGÊNCIA, CARTÃO, EMPRÉSTIMO, INVESTIMENTO
 ```
 
-### Data Warehousing
-```sql
--- Projeção para análise dimensional
-SELECT 
-    ano,
-    mes,
-    categoria_produto,
-    SUM(receita) as receita_total
-FROM fatos_vendas
-GROUP BY ano, mes, categoria_produto;
+### Sistema de RH
+```
+FUNCIONÁRIO, CARGO, DEPARTAMENTO, PROJETO, ALOCAÇÃO, BENEFÍCIO, FOLHA_PAGAMENTO
 ```
 
-## Considerações de Performance
+## Evolução das Entidades
 
-### Índices Apropriados
-Criar índices que incluam as colunas frequentemente projetadas pode melhorar significativamente a performance:
+### Refinamento do Modelo
 
-```sql
--- Índice para projeções frequentes
-CREATE INDEX idx_clientes_contato 
-ON clientes (nome, email, telefone);
+1. **Primeira Versão**
+   - Identifique entidades principais
+   - Foque no essencial
+
+2. **Refinamento**
+   - Adicione detalhes
+   - Considere casos especiais
+   - Valide com stakeholders
+
+3. **Versão Final**
+   - Modelo completo e validado
+   - Pronto para conversão para modelo lógico
+
+### Exemplo de Evolução
+
+**Versão 1:**
+```
+CLIENTE, PRODUTO, PEDIDO
 ```
 
-### Ordem das Colunas
-A ordem das colunas na projeção pode afetar a performance, especialmente em consultas que utilizam índices compostos.
+**Versão 2:**
+```
+CLIENTE, PRODUTO, PEDIDO, CATEGORIA, FORNECEDOR
+```
 
-### Tamanho dos Dados
-Projeções que reduzem significativamente o número de colunas podem melhorar a performance ao diminuir a quantidade de dados transferidos e processados.
+**Versão 3:**
+```
+CLIENTE, PRODUTO, PEDIDO, CATEGORIA, FORNECEDOR, 
+ENDEREÇO, ITEM_PEDIDO, PAGAMENTO
+```
 
-A operação Project é fundamental na álgebra relacional e essencial para a construção de consultas eficientes em SQL, permitindo trabalhar apenas com os dados necessários e otimizando tanto a performance quanto a clareza das consultas.
+## Ferramentas de Modelagem
+
+### Ferramentas Recomendadas
+
+1. **MySQL Workbench**
+   - Gratuita e completa
+   - Suporte a engenharia reversa
+   - Geração de código SQL
+
+2. **Lucidchart**
+   - Colaborativa
+   - Interface intuitiva
+   - Compartilhamento fácil
+
+3. **Draw.io / Diagrams.net**
+   - Gratuita
+   - Baseada na web
+   - Muitos templates
+
+4. **dbdiagram.io**
+   - Especializada em banco de dados
+   - Sintaxe simples
+   - Compartilhamento online
+
+## Boas Práticas
+
+1. **Nomenclatura**
+   - Use nomes descritivos e significativos
+   - Mantenha consistência (singular/plural)
+   - Evite abreviações obscuras
+
+2. **Granularidade**
+   - Não seja muito genérico nem muito específico
+   - Encontre o nível adequado de detalhamento
+   - Considere a evolução futura
+
+3. **Validação**
+   - Valide com stakeholders regularmente
+   - Documente decisões importantes
+   - Mantenha rastreabilidade com requisitos
+
+4. **Simplicidade**
+   - Comece simples e evolua
+   - Evite complexidade desnecessária
+   - Foque no que é realmente importante
+
+## Conclusão
+
+As entidades são a base do modelo conceitual e representam os objetos centrais do sistema de informação. Sua identificação correta é fundamental para o sucesso do projeto de banco de dados. A análise cuidadosa dos requisitos, aplicação de critérios sistemáticos e validação contínua com stakeholders são essenciais para criar um modelo conceitual robusto e que atenda às necessidades do negócio.
