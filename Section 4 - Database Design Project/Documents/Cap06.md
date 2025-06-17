@@ -19,6 +19,137 @@ Por último, é preciso controlar os ajustes e provas que são realizados nos tr
 
 ### 1. Entidades Identificadas
 
+- **TRAJE**
+- **CLASSE**
+- **TAMANHO**
+- **COR**
+- **TECIDO**
+- **MARCA**
+- **LOCAÇÃO**
+- **CLIENTE**
+- **ENDEREÇO**
+- **CIDADE**
+- **ESTADO**
+- **FUNCIONÁRIO**
+- **PARCELA**
+- **FORMA PAGAMENTO**
+- **CONTATO**
+- **AJUSTE**
+- **LOCAL AJUSTE**
+
 ### 2. Atributos das Entidades
 
+**TRAJE**:
+* Idtraje
+* código
+* descrição
+* localização
+* valor locação
+* valor venda
+* valor indenização
+
+**CLASSE**:
+* Idclasse
+* nome
+
+**TAMANHO**:
+* Idtamanho
+* nome
+
+**COR**:
+* Idcor
+* nome
+
+**TECIDO**:
+* Idtecido
+* nome
+
+**MARCA**:
+* Idmarca
+* nome
+
+**LOCAÇÃO**:
+* Idlocação
+* numero\_contrato
+* data retirada
+* hora retirada
+* valor total
+* data devolução
+* valor desconto
+* valor entrada
+* data evento
+* saldo pagar
+* evento
+* valor indenização
+* quantidade
+* data assinatura
+* data reserva
+
+**CLIENTE**:
+* Idcliente
+* nome
+* RG
+* CPF
+
+**ENDEREÇO**:
+* Idendereço
+* logradouro
+* numero
+* CEP
+
+**CIDADE**:
+* Idcidade
+* nome
+
+**ESTADO**:
+* Idestado
+* nome
+
+**FUNCIONÁRIO**:
+* Idfuncionário
+* nome
+
+**PARCELA**:
+* Idparcela
+* data vencimento
+* valor
+* paga
+
+**FORMA PAGAMENTO**:
+* Idforma\_pagamento
+* nome
+
+**CONTATO**:
+* Idcontato
+* tipo
+* conteúdo
+
+**AJUSTE**:
+* Idajuste
+* descrição
+* data prova
+* hora prova
+
+**LOCAL AJUSTE**:
+* Idlocal\_ajuste
+* nome
+
 ### 3. Relacionamentos Identificados
+
+- Traje tem Classe
+- Traje tem Tamanho
+- Traje tem Cor
+- Traje tem Tecido
+- Traje tem Marca
+- Locação possui Traje
+- Ajuste possui Traje
+- Locação possui Cliente
+- Locação possui Funcionário
+- Locação possui Parcela
+- Locação possui Ajuste
+- Cliente possui Endereço
+- Cliente possui Contato
+- Endereço está Cidade
+- Cidade está Estado
+- Parcela possui Forma pagamento
+- Ajuste possui Local ajuste
