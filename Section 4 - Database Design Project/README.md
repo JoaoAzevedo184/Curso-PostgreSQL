@@ -1,8 +1,7 @@
 # 📚 Curso PostgreSQL - Seção 4 : Projeto com Banco de Dados
   
 ## 📌 Sobre
-Este módulo aborda tópicos avançados do PostgreSQL, incluindo procedimentos armazenados, funções, triggers e administração de banco de dados.
-
+Este módulo aborda a construção de bancos de dados desde o modelo conceitual até o modelo físico, incluindo os princípios de normalização e projetos práticos para aplicação dos conhecimentos.
   
 ## 📂 Estrutura do Projeto
 ```
@@ -12,6 +11,10 @@ section-4/
 │
 │── Documents/
 │   └── ...              # Aqui estão todos os assuntos abordados nesta seção
+│
+├── editora.sql       # Projeto 1 
+├── locadora.sql      # Projeto 2 
+├── norma.sql         # Projeto para praticar normalização  
 │
 └── README.md              # Documentação do módulo
 ```
@@ -25,11 +28,11 @@ git clone https://github.com/seu-usuario/curso-postgres.git
 
 2. Acesse o diretório
 ```bash
-cd curso-postgres/section-2
+cd curso-postgres/section-4
 ```
 
 ## 🛠️ Tecnologias Utilizadas
-- **RelaX** - Ferramenta Online
+- **PostgreSQL 15+** - Sistema de Gerenciamento de Banco de Dados
 - **Git** - Controle de versão
 
 ## 🤝 Contribuição
